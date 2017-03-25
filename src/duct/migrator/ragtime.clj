@@ -1,6 +1,17 @@
-(ns duct.migrator.ragtime)
+(ns duct.migrator.ragtime
+  (:require [integrant.core :as ig]
+            [pandect.algo.sha1 :refer [sha1]]
+            [ragtime.repl :as repl]
+            [ragtime.jdbc :as jdbc]
+            [ragtime.strategy :as strategy]))
 
-(defn foo
-  "I don't do a whole lot."
-  [x]
-  (println x "Hello, World!"))
+(def strategies
+  {:apply-new   strategy/apply-new
+   :raise-error strategy/raise-error
+   :rebase      strategy/rebase})
+
+(defmethod ig/init-key :duct.migrator/ragtime
+  [_ {:keys [database strategy migrations] :or {strategy :raise-error}}]
+  (repl/migrate {:datastore  (jdbc/sql-database (:spec database))
+                 :migrations migrations
+                 :strategy   (strategies strategy)}))
