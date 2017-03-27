@@ -1,5 +1,6 @@
 (ns duct.migrator.ragtime
-  (:require [integrant.core :as ig]
+  (:require [clojure.java.io :as io]
+            [integrant.core :as ig]
             [pandect.algo.sha1 :refer [sha1]]
             [ragtime.repl :as repl]
             [ragtime.jdbc :as jdbc]
@@ -17,9 +18,22 @@
   (let [size (.getBytes (str (count bs)) "US-ASCII")]
     (byte-array (concat size colon bs comma))))
 
+(defprotocol ByteSource
+  (get-bytes [source]))
+
+(extend-protocol ByteSource
+  String
+  (get-bytes [s]
+    (.getBytes s "UTF-8"))
+  java.net.URL
+  (get-bytes [url]
+    (let [out (java.io.ByteArrayOutputStream.)]
+      (io/copy (io/input-stream url) out)
+      (.toByteArray out))))
+
 (defn- hash-migration [{:keys [up down]}]
-  (sha1 (byte-array (concat (netstring (.getBytes up))
-                            (netstring (.getBytes down))))))
+  (sha1 (byte-array (concat (netstring (get-bytes up))
+                            (netstring (get-bytes down))))))
 
 (defn- generate-id [key opts]
   (str (:id opts key) ":" (subs (hash-migration opts) 0 8)))
