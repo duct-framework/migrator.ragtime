@@ -36,8 +36,16 @@
   (sha1 (byte-array (concat (netstring (get-bytes up))
                             (netstring (get-bytes down))))))
 
-(defn- generate-id [key opts]
-  (str (:id opts key) ":" (subs (hash-migration opts) 0 8)))
+(defn- singularize [coll]
+  (if (= (count coll) 1) (first coll) coll))
+
+(defn- clean-key [base key]
+  (if (vector? key)
+    (singularize (remove #{base} key))
+    key))
+
+(defn- generate-id [base key opts]
+  (str (:id opts (clean-key base key)) "#" (subs (hash-migration opts) 0 8)))
 
 (defn- migrate [index {:keys [database migrations strategy] :or {strategy :raise-error}}]
   (ragtime/migrate-all (jdbc/sql-database (:spec database)) index migrations
@@ -52,6 +60,6 @@
   (migrate index options))
 
 (defmethod ig/init-key ::sql [key {:keys [up down] :as opts}]
-  (jdbc/sql-migration {:id   (generate-id key opts)
+  (jdbc/sql-migration {:id   (generate-id ::sql key opts)
                        :up   [up]
                        :down [down]}))
