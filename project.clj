@@ -6,4 +6,6 @@
   :dependencies [[org.clojure/clojure "1.8.0"]
                  [integrant "0.3.1"]
                  [pandect "0.6.1"]
-                 [ragtime "0.7.0"]])
+                 [ragtime "0.7.0"]]
+  :profiles
+  {:dev {:dependencies [[org.xerial/sqlite-jdbc "3.16.1"]]}})

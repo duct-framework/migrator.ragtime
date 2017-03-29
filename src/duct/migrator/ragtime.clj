@@ -2,8 +2,9 @@
   (:require [clojure.java.io :as io]
             [integrant.core :as ig]
             [pandect.algo.sha1 :refer [sha1]]
-            [ragtime.repl :as repl]
+            [ragtime.core :as ragtime]
             [ragtime.jdbc :as jdbc]
+            [ragtime.reporter :as reporter]
             [ragtime.strategy :as strategy]))
 
 (def strategies
@@ -38,11 +39,19 @@
 (defn- generate-id [key opts]
   (str (:id opts key) ":" (subs (hash-migration opts) 0 8)))
 
-(defmethod ig/init-key :duct.migrator/ragtime
-  [_ {:keys [database strategy migrations] :or {strategy :raise-error}}]
-  (repl/migrate {:datastore  (jdbc/sql-database (:spec database))
-                 :migrations migrations
-                 :strategy   (strategies strategy)}))
+(defn- migrate [index {:keys [database migrations strategy] :or {strategy :raise-error}}]
+  (ragtime/migrate-all (jdbc/sql-database (:spec database)) index migrations
+                       {:strategy (strategies strategy)
+                        :reporter reporter/print})
+  (ragtime/into-index index migrations))
 
-(defmethod ig/init-key ::sql [key opts]
-  (jdbc/sql-migration (assoc opts :id (generate-id key opts))))
+(defmethod ig/init-key :duct.migrator/ragtime [_ options]
+  (migrate {} options))
+
+(defmethod ig/resume-key :duct.migrator/ragtime [_ options _ index]
+  (migrate index options))
+
+(defmethod ig/init-key ::sql [key {:keys [up down] :as opts}]
+  (jdbc/sql-migration {:id   (generate-id key opts)
+                       :up   [up]
+                       :down [down]}))
