@@ -8,4 +8,7 @@
                  [pandect "0.6.1"]
                  [ragtime "0.7.0"]]
   :profiles
-  {:dev {:dependencies [[org.xerial/sqlite-jdbc "3.16.1"]]}})
+  {:dev {:source-paths ["dev"]
+         :dependencies [[duct/database.sql "0.1.0-SNAPSHOT"]
+                        [integrant/repl "0.1.1"]
+                        [org.xerial/sqlite-jdbc "3.16.1"]]}})
