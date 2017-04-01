@@ -14,7 +14,7 @@
     :migrations [(ig/ref ::create-foo)]}
 
    [:duct.migrator.ragtime/sql ::create-foo]
-   {:up   "CREATE TABLE foo (id int);"
-    :down "DROP TABLE foo;"}})
+   {:up   ["CREATE TABLE foo (id int);"]
+    :down ["DROP TABLE foo;"]}})
 
 (set-prep! (constantly config))

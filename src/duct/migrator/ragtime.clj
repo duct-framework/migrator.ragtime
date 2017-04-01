@@ -22,6 +22,9 @@
 (defprotocol ByteSource
   (get-bytes [source]))
 
+(defprotocol StringSource
+  (get-string [source]))
+
 (extend-protocol ByteSource
   String
   (get-bytes [s]
@@ -31,6 +34,12 @@
     (let [out (java.io.ByteArrayOutputStream.)]
       (io/copy (io/input-stream url) out)
       (.toByteArray out))))
+
+(extend-protocol StringSource
+  String
+  (get-string [s] s)
+  java.net.URL
+  (get-string [s] (slurp s)))
 
 (defn- hash-migration [{:keys [up down]}]
   (sha1 (byte-array (concat (netstring (get-bytes up))
@@ -61,5 +70,5 @@
 
 (defmethod ig/init-key ::sql [key {:keys [up down] :as opts}]
   (jdbc/sql-migration {:id   (generate-id ::sql key opts)
-                       :up   [up]
-                       :down [down]}))
+                       :up   (mapv get-string up)
+                       :down (mapv get-string down)}))
