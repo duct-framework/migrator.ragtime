@@ -12,38 +12,14 @@
    :raise-error strategy/raise-error
    :rebase      strategy/rebase})
 
-(def ^:private colon (.getBytes ":" "US-ASCII"))
-(def ^:private comma (.getBytes "," "US-ASCII"))
-
-(defn- netstring [bs]
-  (let [size (.getBytes (str (count bs)) "US-ASCII")]
-    (byte-array (concat size colon bs comma))))
-
-(defprotocol ByteSource
-  (get-bytes [source]))
-
 (defprotocol StringSource
   (get-string [source]))
-
-(extend-protocol ByteSource
-  String
-  (get-bytes [s]
-    (.getBytes s "UTF-8"))
-  java.net.URL
-  (get-bytes [url]
-    (let [out (java.io.ByteArrayOutputStream.)]
-      (io/copy (io/input-stream url) out)
-      (.toByteArray out))))
 
 (extend-protocol StringSource
   String
   (get-string [s] s)
   java.net.URL
   (get-string [s] (slurp s)))
-
-(defn- hash-migration [{:keys [up down]}]
-  (sha1 (byte-array (concat (netstring (get-bytes up))
-                            (netstring (get-bytes down))))))
 
 (defn- singularize [coll]
   (if (= (count coll) 1) (first coll) coll))
@@ -53,8 +29,27 @@
     (singularize (remove #{base} key))
     key))
 
-(defn- generate-id [base key opts]
-  (str (:id opts (clean-key base key)) "#" (subs (hash-migration opts) 0 8)))
+(def ^:private colon (.getBytes ":"  "US-ASCII"))
+(def ^:private comma (.getBytes ","  "US-ASCII"))
+(def ^:private u=    (.getBytes "u=" "US-ASCII"))
+(def ^:private d=    (.getBytes "d=" "US-ASCII"))
+
+(defn- netstring [bs]
+  (let [size (.getBytes (str (count bs)) "US-ASCII")]
+    (byte-array (concat size colon bs comma))))
+
+(defn- get-bytes [s]
+  (.getBytes s "UTF-8"))
+
+(defn- coll->netstring [coll]
+  (netstring (mapcat (comp netstring get-bytes) coll)))
+
+(defn- hash-migration [{:keys [up down]}]
+  (sha1 (byte-array (concat u= (coll->netstring up)
+                            d= (coll->netstring down)))))
+
+(defn- add-hash-to-id [migration]
+  (update migration :id str "#" (subs (hash-migration migration) 0 8)))
 
 (defn- migrate [index {:keys [database migrations strategy] :or {strategy :raise-error}}]
   (ragtime/migrate-all (jdbc/sql-database (:spec database)) index migrations
@@ -69,6 +64,7 @@
   (migrate index options))
 
 (defmethod ig/init-key ::sql [key {:keys [up down] :as opts}]
-  (jdbc/sql-migration {:id   (generate-id ::sql key opts)
-                       :up   (mapv get-string up)
-                       :down (mapv get-string down)}))
+  (-> (jdbc/sql-migration {:id   (:id opts (clean-key ::sql key))
+                           :up   (mapv get-string up)
+                           :down (mapv get-string down)})
+      (add-hash-to-id)))
