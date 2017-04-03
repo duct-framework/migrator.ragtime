@@ -1,11 +1,18 @@
 (ns duct.migrator.ragtime
   (:require [clojure.java.io :as io]
+            [duct.core :as duct]
             [integrant.core :as ig]
             [pandect.algo.sha1 :refer [sha1]]
             [ragtime.core :as ragtime]
             [ragtime.jdbc :as jdbc]
             [ragtime.reporter :as reporter]
             [ragtime.strategy :as strategy]))
+
+(defn logger-reporter [logger]
+  (fn [_ op id]
+    (case op
+      :up   (duct/log logger :info ::apply id)
+      :down (duct/log logger :info ::rollback id))))
 
 (def strategies
   {:apply-new   strategy/apply-new
@@ -51,10 +58,13 @@
 (defn- add-hash-to-id [migration]
   (update migration :id str "#" (subs (hash-migration migration) 0 8)))
 
-(defn- migrate [index {:keys [database migrations strategy] :or {strategy :raise-error}}]
+(defn- migrate [index {:keys [database migrations strategy logger]
+                       :or   {strategy :raise-error}}]
   (ragtime/migrate-all (jdbc/sql-database (:spec database)) index migrations
                        {:strategy (strategies strategy)
-                        :reporter reporter/print})
+                        :reporter (if logger
+                                    (logger-reporter logger)
+                                    reporter/print)})
   (ragtime/into-index index migrations))
 
 (defmethod ig/init-key :duct.migrator/ragtime [_ options]
