@@ -1,6 +1,6 @@
 (ns duct.migrator.ragtime
   (:require [clojure.java.io :as io]
-            [duct.core :as duct]
+            [duct.logger :as logger]
             [integrant.core :as ig]
             [pandect.algo.sha1 :refer [sha1]]
             [ragtime.core :as ragtime]
@@ -11,8 +11,8 @@
 (defn logger-reporter [logger]
   (fn [_ op id]
     (case op
-      :up   (duct/log logger :info ::applying id)
-      :down (duct/log logger :info ::rolling-back id))))
+      :up   (logger/log logger :info ::applying id)
+      :down (logger/log logger :info ::rolling-back id))))
 
 (def strategies
   {:apply-new   strategy/apply-new
