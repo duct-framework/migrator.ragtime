@@ -67,3 +67,22 @@
            [[::ragtime/applying ":duct.migrator.ragtime-test/create-foo#f1480e44"]
             [::ragtime/applying ":duct.migrator.ragtime-test/create-bar#6d969ce8"]
             [::ragtime/rolling-back ":duct.migrator.ragtime-test/create-bar#6d969ce8"]]))))
+
+(deftest change-and-resume-test
+  (reset! logs [])
+  (drop-all-tables)
+  (let [system  (ig/init config)
+        config' (assoc config
+                       [:duct.migrator.ragtime/sql ::create-bar]
+                       {:up   ["CREATE TABLE barbaz (id int)"]
+                        :down ["DROP TABLE barbaz"]})
+        system' (ig/resume config' system)]
+    (is (= (find-tables)
+           [{:name "ragtime_migrations"}
+            {:name "foo"}
+            {:name "barbaz"}]))
+    (is (= @logs
+           [[::ragtime/applying ":duct.migrator.ragtime-test/create-foo#f1480e44"]
+            [::ragtime/applying ":duct.migrator.ragtime-test/create-bar#6d969ce8"]
+            [::ragtime/rolling-back ":duct.migrator.ragtime-test/create-bar#6d969ce8"]
+            [::ragtime/applying ":duct.migrator.ragtime-test/create-bar#66068fd2"]]))))
