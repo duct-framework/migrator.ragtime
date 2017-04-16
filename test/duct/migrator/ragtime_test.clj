@@ -35,13 +35,35 @@
    {:up   ["CREATE TABLE bar (id int);"]
     :down ["DROP TABLE bar;"]}})
 
+(defn- find-tables []
+  (jdbc/query db-spec ["SELECT name FROM sqlite_master WHERE type='table'"]))
+
+(defn- drop-all-tables []
+  (doseq [t (find-tables)]
+    (jdbc/execute! db-spec [(str "DROP TABLE " (:name t))])))
+
 (deftest migration-test
   (reset! logs [])
+  (drop-all-tables)
   (let [system (ig/init config)]
-    (is (= (jdbc/query db-spec ["SELECT name FROM sqlite_master WHERE type='table'"])
+    (is (= (find-tables)
            [{:name "ragtime_migrations"}
             {:name "foo"}
             {:name "bar"}]))
     (is (= @logs
            [[::ragtime/applying ":duct.migrator.ragtime-test/create-foo#f1480e44"]
             [::ragtime/applying ":duct.migrator.ragtime-test/create-bar#6d969ce8"]]))))
+
+(deftest remove-and-resume-test
+  (reset! logs [])
+  (drop-all-tables)
+  (let [system  (ig/init config)
+        config' (update-in config [:duct.migrator/ragtime :migrations] pop)
+        system' (ig/resume config' system)]
+    (is (= (find-tables)
+           [{:name "ragtime_migrations"}
+            {:name "foo"}]))
+    (is (= @logs
+           [[::ragtime/applying ":duct.migrator.ragtime-test/create-foo#f1480e44"]
+            [::ragtime/applying ":duct.migrator.ragtime-test/create-bar#6d969ce8"]
+            [::ragtime/rolling-back ":duct.migrator.ragtime-test/create-bar#6d969ce8"]]))))
