@@ -2,7 +2,7 @@
   (:require duct.database.sql
             duct.migrator.ragtime
             [integrant.core :as ig]
-            [integrant.repl :refer [system prep init halt go reset set-prep!]]))
+            [integrant.repl :refer [prep init halt go reset set-prep!]]))
 
 (def config
   {:duct.database/sql
