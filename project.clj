@@ -9,8 +9,6 @@
                  [pandect "0.6.1"]
                  [ragtime "0.7.0"]]
   :profiles
-  {:dev {:source-paths ["dev"]
-         :dependencies [[duct/database.sql "0.1.0"]
-                        [integrant/repl "0.2.0"]
+  {:dev {:dependencies [[duct/database.sql "0.1.0"]
                         [org.clojure/java.jdbc "0.7.0-alpha3"]
                         [org.xerial/sqlite-jdbc "3.16.1"]]}})
