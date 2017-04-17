@@ -11,8 +11,8 @@
 (defn logger-reporter [logger]
   (fn [_ op id]
     (case op
-      :up   (logger/log logger :info ::applying id)
-      :down (logger/log logger :info ::rolling-back id))))
+      :up   (logger/log logger :report ::applying id)
+      :down (logger/log logger :report ::rolling-back id))))
 
 (def strategies
   {:apply-new   strategy/apply-new
