@@ -8,6 +8,8 @@
             [ragtime.reporter :as reporter]
             [ragtime.strategy :as strategy]))
 
+(derive :duct.migrator/ragtime :duct/migrator)
+
 (defn logger-reporter [logger]
   (fn [_ op id]
     (case op
