@@ -1,10 +1,13 @@
 (ns duct.migrator.ragtime-test
   (:require [clojure.java.jdbc :as jdbc]
             [clojure.test :refer :all]
+            [duct.core :as duct]
             [duct.database.sql :as sql]
             [duct.logger :as logger]
             [duct.migrator.ragtime :as ragtime]
             [integrant.core :as ig]))
+
+(duct/load-hierarchy)
 
 (defrecord TestLogger [logs]
   logger/Logger

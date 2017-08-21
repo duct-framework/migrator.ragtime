@@ -3,9 +3,10 @@
   :url "https://github.com/duct-framework/migrator.ragtime"
   :license {:name "Eclipse Public License"
             :url "http://www.eclipse.org/legal/epl-v10.html"}
-  :dependencies [[org.clojure/clojure "1.8.0"]
+  :dependencies [[org.clojure/clojure "1.9.0-alpha17"]
+                 [duct/core "0.6.0"]
                  [duct/logger "0.1.1"]
-                 [integrant "0.4.0"]
+                 [integrant "0.6.1"]
                  [pandect "0.6.1"]
                  [ragtime "0.7.0"]]
   :profiles
