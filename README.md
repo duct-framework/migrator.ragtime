@@ -12,7 +12,7 @@
 
 To install, add the following to your project `:dependencies`:
 
-    [duct/migrator.ragtime "0.1.2"]
+    [duct/migrator.ragtime "0.2.0"]
 
 ## Usage
 
