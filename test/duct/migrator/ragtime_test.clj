@@ -11,7 +11,7 @@
 
 (defrecord TestLogger [logs]
   logger/Logger
-  (-log [_ level ns-str file line event data]
+  (-log [_ level ns-str file line id event data]
     (swap! logs conj [event data])))
 
 (def logs
