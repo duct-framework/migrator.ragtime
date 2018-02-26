@@ -58,14 +58,21 @@
 (defn- add-hash-to-id [migration]
   (update migration :id str "#" (subs (hash-migration migration) 0 8)))
 
-(defn- migrate [index {:keys [database migrations strategy logger]
-                       :or   {strategy :raise-error}}]
-  (ragtime/migrate-all (jdbc/sql-database (:spec database)) index migrations
-                       {:strategy (strategies strategy)
-                        :reporter (if logger
-                                    (logger-reporter logger)
-                                    reporter/print)})
-  (ragtime/into-index index migrations))
+(defn- get-database [{{:keys [spec]} :database :as opts}]
+  (jdbc/sql-database spec (select-keys opts [:migrations-table])))
+
+(defn- get-strategy [{:keys [strategy] :or {strategy :raise-error}}]
+  (strategies strategy))
+
+(defn- get-reporter [{:keys [logger]}]
+  (if logger (logger-reporter logger) reporter/print))
+
+(defn- migrate [index {:keys [migrations] :as opts}]
+  (let [db    (get-database opts)
+        strat (get-strategy opts)
+        rep   (get-reporter opts)]
+    (ragtime/migrate-all db index migrations {:reporter rep, :strategy strat})
+    (ragtime/into-index index migrations)))
 
 (defmethod ig/init-key :duct.migrator/ragtime [_ options]
   (migrate {} options))

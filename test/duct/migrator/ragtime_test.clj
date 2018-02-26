@@ -45,21 +45,35 @@
   (doseq [t (find-tables)]
     (jdbc/execute! db-spec [(str "DROP TABLE " (:name t))])))
 
-(deftest migration-test
+(defn- migration-works-spec [migrations-table]
+  (is (= (find-tables)
+         [{:name migrations-table}
+          {:name "foo"}
+          {:name "bar"}]))
+  (is (= @logs
+         [[::ragtime/applying ":duct.migrator.ragtime-test/create-foo#f1480e44"]
+          [::ragtime/applying ":duct.migrator.ragtime-test/create-bar#6d969ce8"]])))
+
+(defn reset-test-state []
   (reset! logs [])
-  (drop-all-tables)
-  (let [system (ig/init config)]
-    (is (= (find-tables)
-           [{:name "ragtime_migrations"}
-            {:name "foo"}
-            {:name "bar"}]))
-    (is (= @logs
-           [[::ragtime/applying ":duct.migrator.ragtime-test/create-foo#f1480e44"]
-            [::ragtime/applying ":duct.migrator.ragtime-test/create-bar#6d969ce8"]]))))
+  (drop-all-tables))
+
+(deftest migration-test
+  (testing "default migrations table name"
+    (reset-test-state)
+    (let [system (ig/init config)]
+      (migration-works-spec "ragtime_migrations")))
+
+  (testing "custom migrations table name"
+    (reset-test-state)
+    (let [migrations-table "custom_migrations"
+          system (-> config
+                     (assoc-in [:duct.migrator/ragtime :migrations-table] migrations-table)
+                     ig/init)]
+      (migration-works-spec migrations-table))))
 
 (deftest remove-and-resume-test
-  (reset! logs [])
-  (drop-all-tables)
+  (reset-test-state)
   (let [system  (ig/init config)
         config' (update-in config [:duct.migrator/ragtime :migrations] pop)
         system' (ig/resume config' system)]
@@ -72,8 +86,7 @@
             [::ragtime/rolling-back ":duct.migrator.ragtime-test/create-bar#6d969ce8"]]))))
 
 (deftest change-and-resume-test
-  (reset! logs [])
-  (drop-all-tables)
+  (reset-test-state)
   (let [system  (ig/init config)
         config' (assoc config
                        [:duct.migrator.ragtime/sql ::create-bar]
