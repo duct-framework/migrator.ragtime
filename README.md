@@ -63,6 +63,10 @@ Migrations built in this way expect an `:up` and a `:down` key that
 contain vectors of SQL, either as strings, or URLs to resources on the
 classpath.
 
+To specify URLs to resources on the classpath, use the `#duct/resource` reader tag. For example,
+to reference `PROJECT_PATH/resources/migrations/01-init.up.sql`, specify
+`#duct/resource "migrations/01-init.up.sql`.
+
 [database.sql]:       https://github.com/duct-framework/database.sql
 [logger]:             https://github.com/duct-framework/logger
 [ragtime strategies]: https://weavejester.github.io/ragtime/ragtime.strategy.html
