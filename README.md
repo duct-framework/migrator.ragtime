@@ -63,6 +63,17 @@ Migrations built in this way expect an `:up` and a `:down` key that
 contain vectors of SQL, either as strings, or URLs to resources on the
 classpath.
 
+Resources can be specified in the edn configuration file using the
+`#duct/resource` tag. For example:
+
+```edn
+{[:duct.migrator.ragtime/sql :foo.migration/create-foo-table]
+ {:up   [#duct/resource "migrations/foo-up.sql"]
+  :down [#duct/resource "migrations/foo-down.sql"]}}
+```
+
+The associated SQL files can then be placed in `resources/migrations`.
+
 [database.sql]:       https://github.com/duct-framework/database.sql
 [logger]:             https://github.com/duct-framework/logger
 [ragtime strategies]: https://weavejester.github.io/ragtime/ragtime.strategy.html
