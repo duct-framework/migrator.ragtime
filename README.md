@@ -21,10 +21,10 @@ which takes four options:
 
 ```edn
 {:duct.migrator/ragtime
- {:database   #ref :duct.database/sql
-  :logger     #ref :duct/logger
+ {:database   #ig/ref :duct.database/sql
+  :logger     #ig/ref :duct/logger
   :strategy   :rebase
-  :migrations [#ref :foo.migration/create-foo-table]}}
+  :migrations [#ig/ref :foo.migration/create-foo-table]}}
 ```
 
 The `:database` key should be a SQL database compatible with the Duct
@@ -42,7 +42,7 @@ The `:logger` key should be a logger compatible with the Duct
 {:duct.logger.timbre/println {}
  :duct.logger/timbre
  {:level    :info
-  :appender #ref :duct.logger.timbre/println}}
+  :appender #ig/ref :duct.logger.timbre/println}}
 ```
 
 The `:strategy` is either `:apply-new`, `:raise-error` or
