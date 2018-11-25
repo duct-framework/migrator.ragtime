@@ -26,6 +26,8 @@
   String
   (get-string [s] s)
   java.net.URL
+  (get-string [s] (slurp s))
+  duct.core.resource.Resource
   (get-string [s] (slurp s)))
 
 (defn- singularize [coll]
