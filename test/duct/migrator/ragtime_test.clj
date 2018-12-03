@@ -5,7 +5,8 @@
             [duct.database.sql :as sql]
             [duct.logger :as logger]
             [duct.migrator.ragtime :as ragtime]
-            [integrant.core :as ig]))
+            [integrant.core :as ig]
+            [clojure.java.io :as io]))
 
 (duct/load-hierarchy)
 
@@ -102,3 +103,8 @@
             [::ragtime/applying ":duct.migrator.ragtime-test/create-bar#6d969ce8"]
             [::ragtime/rolling-back ":duct.migrator.ragtime-test/create-bar#6d969ce8"]
             [::ragtime/applying ":duct.migrator.ragtime-test/create-bar#66068fd2"]]))))
+
+(deftest string-source-test
+  (is (= "foo\n" (ragtime/get-string "foo\n")))
+  (is (= "foo\n" (ragtime/get-string (io/resource "duct/migrator/example.txt"))))
+  (is (= "foo\n" (ragtime/get-string (duct/resource "duct/migrator/example.txt")))))
