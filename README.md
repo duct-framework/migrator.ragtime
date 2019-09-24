@@ -17,14 +17,15 @@ To install, add the following to your project `:dependencies`:
 ## Usage
 
 This library provides the `:duct.migrator/ragtime` Integrant key,
-which takes four options:
+which takes five options:
 
 ```edn
 {:duct.migrator/ragtime
  {:database   #ig/ref :duct.database/sql
   :logger     #ig/ref :duct/logger
   :strategy   :rebase
-  :migrations [#ig/ref :foo.migration/create-foo-table]}}
+  :migrations [#ig/ref :foo.migration/create-foo-table]}
+  :migrations-table "ragtime_migrations"}
 ```
 
 The `:database` key should be a SQL database compatible with the Duct
@@ -77,6 +78,13 @@ The associated SQL files can then be placed in `resources/migrations`.
 [database.sql]:       https://github.com/duct-framework/database.sql
 [logger]:             https://github.com/duct-framework/logger
 [ragtime strategies]: https://weavejester.github.io/ragtime/ragtime.strategy.html
+
+The `:migrations-table` optional key corresponds
+to the [ragtime sql-database][] option with the same name. It is the
+name of the table to store the applied migrations (defaults to
+"ragtime_migrations" if not specified).
+
+[ragtime sql-database]: https://weavejester.github.io/ragtime/ragtime.jdbc.html#var-sql-database
 
 ## License
 
