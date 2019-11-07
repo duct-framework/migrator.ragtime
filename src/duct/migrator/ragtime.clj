@@ -87,3 +87,9 @@
                            :up   (mapv get-string up)
                            :down (mapv get-string down)})
       (add-hash-to-id)))
+
+(defmethod ig/init-key ::resources [_ {:keys [path]}]
+  (->> (jdbc/load-resources path) (map add-hash-to-id)))
+
+(defmethod ig/init-key ::directory [_ {:keys [path]}]
+  (->> (jdbc/load-directory path) (map add-hash-to-id)))

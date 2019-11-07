@@ -39,21 +39,36 @@
    {:up   ["CREATE TABLE bar (id int);"]
     :down ["DROP TABLE bar;"]}})
 
+(def config-resources
+  {:duct.database/sql db-spec
+
+   :duct.migrator/ragtime
+   {:database   (ig/ref :duct.database/sql)
+    :strategy   :rebase
+    :logger     (->TestLogger logs)
+    :migrations (ig/ref :duct.migrator.ragtime/resources)}
+
+   :duct.migrator.ragtime/resources
+   {:path "duct/migrator/migrations"}})
+
+(def config-directory
+  {:duct.database/sql db-spec
+
+   :duct.migrator/ragtime
+   {:database   (ig/ref :duct.database/sql)
+    :strategy   :rebase
+    :logger     (->TestLogger logs)
+    :migrations (ig/ref :duct.migrator.ragtime/directory)}
+
+   :duct.migrator.ragtime/directory
+   {:path "test/duct/migrator/migrations"}})
+
 (defn- find-tables []
   (jdbc/query db-spec ["SELECT name FROM sqlite_master WHERE type='table'"]))
 
 (defn- drop-all-tables []
   (doseq [t (find-tables)]
     (jdbc/execute! db-spec [(str "DROP TABLE " (:name t))])))
-
-(defn- migration-works-spec [migrations-table]
-  (is (= (find-tables)
-         [{:name migrations-table}
-          {:name "foo"}
-          {:name "bar"}]))
-  (is (= @logs
-         [[::ragtime/applying ":duct.migrator.ragtime-test/create-foo#f1480e44"]
-          [::ragtime/applying ":duct.migrator.ragtime-test/create-bar#6d969ce8"]])))
 
 (defn reset-test-state []
   (reset! logs [])
@@ -63,7 +78,11 @@
   (testing "default migrations table name"
     (reset-test-state)
     (let [system (ig/init config)]
-      (migration-works-spec "ragtime_migrations")))
+      (is (= (find-tables)
+             [{:name "ragtime_migrations"} {:name "foo"} {:name "bar"}]))
+      (is (= @logs
+             [[::ragtime/applying ":duct.migrator.ragtime-test/create-foo#f1480e44"]
+              [::ragtime/applying ":duct.migrator.ragtime-test/create-bar#6d969ce8"]]))))
 
   (testing "custom migrations table name"
     (reset-test-state)
@@ -71,7 +90,29 @@
           system (-> config
                      (assoc-in [:duct.migrator/ragtime :migrations-table] migrations-table)
                      ig/init)]
-      (migration-works-spec migrations-table))))
+      (is (= (find-tables)
+             [{:name migrations-table} {:name "foo"} {:name "bar"}]))
+      (is (= @logs
+             [[::ragtime/applying ":duct.migrator.ragtime-test/create-foo#f1480e44"]
+              [::ragtime/applying ":duct.migrator.ragtime-test/create-bar#6d969ce8"]]))))
+
+  (testing "migrations from resource directory"
+    (reset-test-state)
+    (let [system (ig/init config-resources)]
+      (is (= (find-tables)
+             [{:name "ragtime_migrations"} {:name "foo"} {:name "bar"}]))
+      (is (= @logs
+             [[::ragtime/applying "01-create-foo#f1480e44"]
+              [::ragtime/applying "02-create-bar#6d969ce8"]]))))
+
+  (testing "migrations from filesystem directory"
+    (reset-test-state)
+    (let [system (ig/init config-directory)]
+      (is (= (find-tables)
+             [{:name "ragtime_migrations"} {:name "foo"} {:name "bar"}]))
+      (is (= @logs
+             [[::ragtime/applying "01-create-foo#f1480e44"]
+              [::ragtime/applying "02-create-bar#6d969ce8"]])))))
 
 (deftest remove-and-resume-test
   (reset-test-state)
