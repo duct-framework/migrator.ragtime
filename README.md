@@ -24,8 +24,8 @@ which takes five options:
  {:database   #ig/ref :duct.database/sql
   :logger     #ig/ref :duct/logger
   :strategy   :rebase
-  :migrations [#ig/ref :foo.migration/create-foo-table]}
-  :migrations-table "ragtime_migrations"}
+  :migrations [#ig/ref :foo.migration/create-foo-table]
+  :migrations-table "ragtime_migrations"}}
 ```
 
 The `:database` key should be a SQL database compatible with the Duct
