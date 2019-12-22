@@ -1,5 +1,5 @@
 (ns duct.migrator.ragtime
-  (:require [clojure.java.io :as io]
+  (:require [duct.core.resource]
             [duct.logger :as logger]
             [integrant.core :as ig]
             [pandect.algo.sha1 :refer [sha1]]
@@ -47,7 +47,7 @@
   (let [size (.getBytes (str (count bs)) "US-ASCII")]
     (byte-array (concat size colon bs comma))))
 
-(defn- get-bytes [s]
+(defn- get-bytes [^String s]
   (.getBytes s "UTF-8"))
 
 (defn- coll->netstring [coll]
