@@ -1,5 +1,6 @@
 (ns duct.migrator.ragtime
   (:require [clojure.java.io :as io]
+            [duct.core :as duct]
             [duct.logger :as logger]
             [integrant.core :as ig]
             [pandect.algo.sha1 :refer [sha1]]
