@@ -73,9 +73,10 @@
 (defn- migrate [index {:keys [migrations] :as opts}]
   (let [db    (get-database opts)
         strat (get-strategy opts)
-        rep   (get-reporter opts)]
-    (ragtime/migrate-all db index migrations {:reporter rep, :strategy strat})
-    (ragtime/into-index index migrations)))
+        rep   (get-reporter opts)
+        migs  (flatten migrations)]
+    (ragtime/migrate-all db index migs {:reporter rep, :strategy strat})
+    (ragtime/into-index index migs)))
 
 (defmethod ig/init-key :duct.migrator/ragtime [_ options]
   (migrate {} options))

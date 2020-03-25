@@ -63,6 +63,23 @@
    :duct.migrator.ragtime/directory
    {:path "test/duct/migrator/migrations"}})
 
+(def config-mixed
+  {:duct.database/sql db-spec
+
+   :duct.migrator/ragtime
+   {:database   (ig/ref :duct.database/sql)
+    :strategy   :rebase
+    :logger     (->TestLogger logs)
+    :migrations [(ig/ref :duct.migrator.ragtime/resources)
+                 (ig/ref ::create-baz)]}
+
+   :duct.migrator.ragtime/resources
+   {:path "duct/migrator/migrations"}
+
+   [:duct.migrator.ragtime/sql ::create-baz]
+   {:up   ["CREATE TABLE baz (id int);"]
+    :down ["DROP TABLE baz;"]}})
+
 (defn- find-tables []
   (jdbc/query db-spec ["SELECT name FROM sqlite_master WHERE type='table'"]))
 
@@ -112,7 +129,17 @@
              [{:name "ragtime_migrations"} {:name "foo"} {:name "bar"}]))
       (is (= @logs
              [[::ragtime/applying "01-create-foo#f1480e44"]
-              [::ragtime/applying "02-create-bar#6d969ce8"]])))))
+              [::ragtime/applying "02-create-bar#6d969ce8"]]))))
+
+  (testing "migrations from multiple sources"
+    (reset-test-state)
+    (let [system (ig/init config-mixed)]
+      (is (= (find-tables)
+             [{:name "ragtime_migrations"} {:name "foo"} {:name "bar"} {:name "baz"}]))
+      (is (= @logs
+             [[::ragtime/applying "01-create-foo#f1480e44"]
+              [::ragtime/applying "02-create-bar#6d969ce8"]
+              [::ragtime/applying ":duct.migrator.ragtime-test/create-baz#01f7277d"]])))))
 
 (deftest remove-and-resume-test
   (reset-test-state)
