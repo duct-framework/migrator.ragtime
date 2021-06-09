@@ -16,9 +16,10 @@
       :down (logger/log logger :report ::rolling-back id))))
 
 (def strategies
-  {:apply-new   strategy/apply-new
-   :raise-error strategy/raise-error
-   :rebase      strategy/rebase})
+  {:apply-new     strategy/apply-new
+   :raise-error   strategy/raise-error
+   :rebase        strategy/rebase
+   :ignore-future strategy/ignore-future})
 
 (defprotocol StringSource
   (get-string [source]))
