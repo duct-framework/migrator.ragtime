@@ -8,8 +8,8 @@
                  [duct/logger "0.3.0"]
                  [integrant "0.8.0"]
                  [pandect "0.6.1"]
-                 [ragtime "0.8.0"]]
+                 [ragtime "0.9.1"]]
   :profiles
   {:dev {:dependencies [[duct/database.sql "0.1.0"]
-                        [org.clojure/java.jdbc "0.7.11"]
+                        [org.clojure/java.jdbc "0.7.12"]
                         [org.xerial/sqlite-jdbc "3.30.1"]]}})
