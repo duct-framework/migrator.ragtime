@@ -1,6 +1,4 @@
-# Duct migrator.ragtime
-
-[![Build Status](https://travis-ci.org/duct-framework/migrator.ragtime.svg?branch=master)](https://travis-ci.org/duct-framework/migrator.ragtime)
+# Duct migrator.ragtime [![Build Status](https://github.com/duct-framework/migrator.ragtime/actions/workflows/test.yml/badge.svg)](https://github.com/duct-framework/migrator.ragtime/actions/workflows/test.yml)
 
 [Integrant][] methods for running database migrations using
 [Ragtime][].
