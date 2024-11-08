@@ -23,35 +23,32 @@ which takes five options:
 
 ```edn
 {:duct.migrator/ragtime
- {:database   #ig/ref :duct.database/sql
-  :logger     #ig/ref :duct/logger
-  :strategy   :rebase
-  :migrations [#ig/ref :foo.migration/create-foo-table]
+ {:database         #ig/ref :duct.database/sql
+  :logger           #ig/ref :duct/logger
+  :strategy         :rebase
+  :migrations-file  "migrations.edn"
   :migrations-table "ragtime_migrations"}}
 ```
 
 ### :database
 
 The `:database` key should be a SQL database compatible with the Duct
-[database.sql][] library. For example:
+[database.sql][] library, such as [database.sql.hikaricp][]:
 
 ```edn
-{:duct.database.sql/hikaricp
- {:jdbc-url "jdbc:sqlite:db/foo.sqlite"}}
+{:duct.database.sql/hikaricp {:jdbcUrl "jdbc:sqlite:db/foo.sqlite"}}
 ```
 
 [database.sql]: https://github.com/duct-framework/database.sql
+[database.sql.hikaricp]: https://github.com/duct-framework/database.sql.hikaricp
 
 ### :logger
 
 The `:logger` key should be a logger compatible with the Duct
-[logger][] library:
+[logger][] library, such as [logger.simple][]:
 
 ```edn
-{:duct.logger.timbre/println {}
- :duct.logger/timbre
- {:level    :info
-  :appender #ig/ref :duct.logger.timbre/println}}
+{:duct.logger/simple {:appenders [{:type :stdout}]}}
 ```
 
 [logger]: https://github.com/duct-framework/logger
@@ -64,69 +61,11 @@ same names.
 
 [ragtime strategies]: https://weavejester.github.io/ragtime/ragtime.strategy.html
 
-### :migrations
+### :migrations-file
 
-The `:migrations` are an ordered collection of migrations. The easiest
-way to create these is to use a composite key that is derived from
-`:duct.migrator.ragtime/sql`.
+A path to an edn file containing a vector of [Ragtime SQL migrations][].
 
-```edn
-{[:duct.migrator.ragtime/sql :foo.migration/create-foo-table]
- {:up   ["CREATE TABLE foo (id int);"]
-  :down ["DROP TABLE foo;"]}}
-```
-
-Migrations built in this way expect an `:up` and a `:down` key that
-contain vectors of SQL, either as strings, or URLs to resources on the
-classpath.
-
-Resources can be specified in the edn configuration file using the
-`#duct/resource` tag. For example:
-
-```edn
-{[:duct.migrator.ragtime/sql :foo.migration/create-foo-table]
- {:up   [#duct/resource "migrations/foo.up.sql"]
-  :down [#duct/resource "migrations/foo.down.sql"]}}
-```
-
-The associated SQL files can then be placed in `resources/migrations`.
-
-Alternatively, you can use the `:duct.migrator.ragtime/resources` key,
-which will look for resources in a directory:
-
-```edn
-{:duct.migrator.ragtime/resources {:path "migrations"}}
-```
-
-A migration resource can either be a pair of SQL files ending in
-`.up.sql` and `.down.sql`, or it can be an edn file ending in `.edn`
-that contains a map with an `:up` and a `:down` key containing vectors
-of SQL strings.
-
-You can also specify SQL files in an external directory:
-
-```edn
-{:duct.migrator.ragtime/directory {:path "example/migrations"}}
-```
-
-It's possible to mix migrations from multiple places. The
-`:migrations` key will flatten nested collections, so it's possible to
-have a configuration like:
-
-```edn
-{:duct.migrator/ragtime
- {:database   #ig/ref :duct.database/sql
-  :logger     #ig/ref :duct/logger
-  :strategy   :rebase
-  :migrations [#ig/ref :foo.migrations/dev
-               #ig/ref :foo.migrations/prod]}
-
- [:duct.migrator.ragtime/resources :foo.migrations/dev]
- {:path "dev/migrations"}
-
- [:duct.migrator.ragtime/resources :foo.migrations/prod]
- {:path "prod/migrations"}}
-```
+[ragtime sql migrations]: https://github.com/weavejester/ragtime/wiki/SQL-Migrations#edn
 
 ### :migrations-table
 
