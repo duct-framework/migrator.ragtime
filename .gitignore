@@ -11,3 +11,4 @@ pom.xml.asc
 .hg/
 /dev.sqlite
 /.clj-kondo
+/.cpcache
