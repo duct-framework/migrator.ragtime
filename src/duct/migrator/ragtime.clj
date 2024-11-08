@@ -1,44 +1,24 @@
 (ns duct.migrator.ragtime
-  (:require [clojure.java.io :as io]
-            [duct.core :as duct]
-            [duct.logger :as logger]
+  (:require [duct.logger :as logger]
             [integrant.core :as ig]
             [pandect.algo.sha1 :refer [sha1]]
             [ragtime.core :as ragtime]
-            [ragtime.jdbc :as jdbc]
+            [ragtime.sql :as sql]
+            [ragtime.next-jdbc :as jdbc]
             [ragtime.reporter :as reporter]
             [ragtime.strategy :as strategy]))
 
 (defn logger-reporter [logger]
   (fn [_ op id]
     (case op
-      :up   (logger/log logger :report ::applying id)
-      :down (logger/log logger :report ::rolling-back id))))
+      :up   (logger/report logger ::applying {:id id})
+      :down (logger/report logger ::rolling-back {:id id}))))
 
 (def strategies
   {:apply-new     strategy/apply-new
    :raise-error   strategy/raise-error
    :rebase        strategy/rebase
    :ignore-future strategy/ignore-future})
-
-(defprotocol StringSource
-  (get-string [source]))
-
-(extend-protocol StringSource
-  String
-  (get-string [s] s)
-  java.net.URL
-  (get-string [s] (slurp s))
-  duct.core.resource.Resource
-  (get-string [s] (slurp s)))
-
-(defn- singularize [coll]
-  (if (= (count coll) 1) (first coll) coll))
-
-(defn- clean-key [base key]
-  (if (vector? key)
-    (singularize (remove #{base} key))
-    key))
 
 (def ^:private colon (.getBytes ":"  "US-ASCII"))
 (def ^:private comma (.getBytes ","  "US-ASCII"))
@@ -62,8 +42,12 @@
 (defn- add-hash-to-id [migration]
   (update migration :id str "#" (subs (hash-migration migration) 0 8)))
 
-(defn- get-database [{{:keys [spec]} :database :as opts}]
-  (jdbc/sql-database spec (select-keys opts [:migrations-table])))
+(defn- load-migrations [{:keys [migrations-file]}]
+  (->> (sql/load-migrations migrations-file)
+       (map (comp jdbc/sql-migration add-hash-to-id))))
+
+(defn- get-database [{{:keys [datasource]} :database :as opts}]
+  (jdbc/sql-database datasource (select-keys opts [:migrations-table])))
 
 (defn- get-strategy [{:keys [strategy] :or {strategy :raise-error}}]
   (strategies strategy))
@@ -71,11 +55,11 @@
 (defn- get-reporter [{:keys [logger]}]
   (if logger (logger-reporter logger) reporter/print))
 
-(defn- migrate [index {:keys [migrations] :as opts}]
-  (let [db    (get-database opts)
-        strat (get-strategy opts)
-        rep   (get-reporter opts)
-        migs  (flatten migrations)]
+(defn- migrate [index options]
+  (let [db    (get-database options)
+        strat (get-strategy options)
+        rep   (get-reporter options)
+        migs  (load-migrations options)]
     (ragtime/migrate-all db index migs {:reporter rep, :strategy strat})
     (ragtime/into-index index migs)))
 
@@ -84,15 +68,3 @@
 
 (defmethod ig/resume-key :duct.migrator/ragtime [_ options _ index]
   (migrate index options))
-
-(defmethod ig/init-key ::sql [key {:keys [up down] :as opts}]
-  (-> (jdbc/sql-migration {:id   (:id opts (clean-key ::sql key))
-                           :up   (mapv get-string up)
-                           :down (mapv get-string down)})
-      (add-hash-to-id)))
-
-(defmethod ig/init-key ::resources [_ {:keys [path]}]
-  (->> (jdbc/load-resources path) (map add-hash-to-id)))
-
-(defmethod ig/init-key ::directory [_ {:keys [path]}]
-  (->> (jdbc/load-directory path) (map add-hash-to-id)))

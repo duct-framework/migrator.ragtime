@@ -1,0 +1,2 @@
+[[:create-table foo (id "INTEGER")]
+ [:create-table baz (id "INTEGER")]]
