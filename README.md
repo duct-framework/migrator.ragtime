@@ -8,7 +8,11 @@
 
 ## Installation
 
-To install, add the following to your project `:dependencies`:
+Add the following dependency to your deps.edn file:
+
+    duct/migrator.ragtime {:mvn/version "0.3.2"}
+
+Or to your Leiningen project file:
 
     [duct/migrator.ragtime "0.3.2"]
 
