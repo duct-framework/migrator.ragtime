@@ -34,7 +34,7 @@
 
     (testing "initial migrations"
       (let [logs (-> @system ::logger :logs)
-            db   (-> @system :duct.database/sql :datasource)]
+            db   (-> @system :duct.database/sql)]
         (is (= ["ragtime_migrations" "foo" "bar"]
                (map :sqlite_master/name (find-tables db))))
         (is (= [[:duct.migrator.ragtime/applying {:id "create-table-foo#52bfa531"}]
@@ -46,7 +46,7 @@
                              "test/duct/migrator/migrations2.edn")
             system (swap! system (fn [sys] (ig/suspend! sys) (ig/resume config sys)))
             logs   (-> system ::logger :logs)
-            db     (-> system :duct.database/sql :datasource)]
+            db     (-> system :duct.database/sql)]
         (is (= ["ragtime_migrations" "foo" "baz"]
                (map :sqlite_master/name (find-tables db))))
         (is (= [[:duct.migrator.ragtime/rolling-back {:id "create-table-bar#3e718b28"}]
@@ -58,7 +58,7 @@
                              "test/duct/migrator/migrations3.edn")
             system (swap! system (fn [sys] (ig/suspend! sys) (ig/resume config sys)))
             logs   (-> system ::logger :logs)
-            db     (-> system :duct.database/sql :datasource)]
+            db     (-> system :duct.database/sql)]
         (is (= ["ragtime_migrations" "foo"]
                (map :sqlite_master/name (find-tables db))))
         (is (= [[:duct.migrator.ragtime/rolling-back {:id "create-table-baz#055a605e"}]]

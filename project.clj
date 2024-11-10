@@ -9,6 +9,6 @@
                  [integrant "0.13.1"]
                  [pandect "1.0.2"]]
   :profiles
-  {:dev {:dependencies [[org.duct-framework/database.sql "0.3.0"]
+  {:dev {:dependencies [[org.duct-framework/database.sql "0.4.0"]
                         [com.github.seancorfield/next.jdbc "1.3.955"]
                         [org.xerial/sqlite-jdbc "3.47.0.0"]]}})

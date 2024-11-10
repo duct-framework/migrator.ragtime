@@ -46,8 +46,8 @@
   (->> (sql/load-migrations migrations-file)
        (map (comp jdbc/sql-migration add-hash-to-id))))
 
-(defn- get-database [{{:keys [datasource]} :database :as opts}]
-  (jdbc/sql-database datasource (select-keys opts [:migrations-table])))
+(defn- get-database [{:keys [database] :as opts}]
+  (jdbc/sql-database database (select-keys opts [:migrations-table])))
 
 (defn- get-strategy [{:keys [strategy] :or {strategy :raise-error}}]
   (strategies strategy))
