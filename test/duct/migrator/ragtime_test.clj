@@ -64,5 +64,13 @@
         (is (= [[:duct.migrator.ragtime/rolling-back {:id "create-table-baz#055a605e"}]]
                @logs))))
 
+    (testing "missing migration file"
+      (let [path   "test/duct/migrator/migrations-missing.edn"
+            config (assoc-in config [:duct.migrator/ragtime :migrations-file] path)
+            system (swap! system (fn [sys] (ig/suspend! sys) (ig/resume config sys)))
+            logs   (-> system ::logger :logs)]
+        (is (= [[:duct.migrator.ragtime/missing-file {:path path}]]
+               @logs))))
+
     (.delete tempfile)))
 

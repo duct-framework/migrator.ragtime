@@ -1,5 +1,6 @@
 (ns duct.migrator.ragtime
-  (:require [duct.logger :as logger]
+  (:require [clojure.java.io :as io]
+            [duct.logger :as logger]
             [integrant.core :as ig]
             [pandect.algo.sha1 :refer [sha1]]
             [ragtime.core :as ragtime]
@@ -55,13 +56,25 @@
 (defn- get-reporter [{:keys [logger]}]
   (if logger (logger-reporter logger) reporter/print))
 
+(defn- migrations-file-exists? [{:keys [migrations-file]}]
+  {:pre [(some? migrations-file)]}
+  (.exists (io/file migrations-file)))
+
+(defn- report-missing-migrations-file [{:keys [logger migrations-file]}]
+  (if logger
+    (logger/warn logger ::missing-file {:path migrations-file})
+    (binding [*out* *err*]
+      (println "WARN: Missing migrations file:" migrations-file))))
+
 (defn- migrate [index options]
-  (let [db    (get-database options)
-        strat (get-strategy options)
-        rep   (get-reporter options)
-        migs  (load-migrations options)]
-    (ragtime/migrate-all db index migs {:reporter rep, :strategy strat})
-    (ragtime/into-index index migs)))
+  (if (migrations-file-exists? options)
+    (let [db    (get-database options)
+          strat (get-strategy options)
+          rep   (get-reporter options)
+          migs  (load-migrations options)]
+      (ragtime/migrate-all db index migs {:reporter rep, :strategy strat})
+      (ragtime/into-index index migs))
+    (report-missing-migrations-file options)))
 
 (defmethod ig/init-key :duct.migrator/ragtime [_ options]
   (migrate {} options))
