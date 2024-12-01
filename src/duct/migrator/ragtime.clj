@@ -74,7 +74,7 @@
           migs  (load-migrations options)]
       (ragtime/migrate-all db index migs {:reporter rep, :strategy strat})
       (ragtime/into-index index migs))
-    (report-missing-migrations-file options)))
+    (do (report-missing-migrations-file options) {})))
 
 (defmethod ig/init-key :duct.migrator/ragtime [_ options]
   (migrate {} options))

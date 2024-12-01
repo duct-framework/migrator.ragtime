@@ -72,5 +72,14 @@
         (is (= [[:duct.migrator.ragtime/missing-file {:path path}]]
                @logs))))
 
-    (.delete tempfile)))
+    (testing "resume after missing migration file"
+      (let [system (swap! system (fn [sys] (ig/suspend! sys) (ig/resume config sys)))
+            logs   (-> system ::logger :logs)
+            db     (-> system :duct.database/sql)]
+        (is (= ["ragtime_migrations" "foo" "bar"]
+               (map :sqlite_master/name (find-tables db))))
+        (is (= [[:duct.migrator.ragtime/applying {:id "create-table-bar#3e718b28"}]]
+               @logs))))
 
+    (ig/halt! @system)
+    (.delete tempfile)))
