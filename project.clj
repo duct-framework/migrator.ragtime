@@ -1,4 +1,4 @@
-(defproject org.duct-framework/migrator.ragtime "0.5.2"
+(defproject org.duct-framework/migrator.ragtime "0.5.3"
   :description "Integrant methods for running database migrations using Ragtime"
   :url "https://github.com/duct-framework/migrator.ragtime"
   :license {:name "Eclipse Public License"
