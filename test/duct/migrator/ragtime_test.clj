@@ -66,5 +66,15 @@
         (is (= [[:duct.migrator.ragtime/rolling-back {:id "create-table-baz#055a605e"}]]
                @logs))))
 
+    (testing "empty migrations"
+      (let [config (update config :duct.migrator/ragtime dissoc :migrations)
+            system (swap! system (fn [sys] (ig/suspend! sys) (ig/resume config sys)))
+            logs   (-> system ::logger :logs)
+            db     (-> system :duct.database/sql)]
+        (is (= ["ragtime_migrations"]
+               (map :sqlite_master/name (find-tables db))))
+        (is (= [[:duct.migrator.ragtime/rolling-back {:id "create-table-foo#52bfa531"}]]
+               @logs))))
+
     (ig/halt! @system)
     (.delete tempfile)))
