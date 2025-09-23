@@ -16,10 +16,11 @@
   {::logger {}
    :duct.database/sql {}
    :duct.migrator/ragtime
-   {:logger          (ig/ref ::logger)
-    :database        (ig/ref :duct.database/sql)
-    :strategy        :rebase
-    :migrations-file "test/duct/migrator/migrations1.edn"}})
+   {:logger     (ig/ref ::logger)
+    :database   (ig/ref :duct.database/sql)
+    :strategy   :rebase
+    :migrations '[[:create-table foo (id "INTEGER")]
+                  [:create-table bar (id "INTEGER")]]}})
 
 (defn- find-tables [db]
   (jdbc/execute! db ["SELECT name FROM sqlite_master WHERE type='table'"]))
@@ -42,8 +43,9 @@
                @logs))))
 
     (testing "change migration"
-      (let [config (assoc-in config [:duct.migrator/ragtime :migrations-file]
-                             "test/duct/migrator/migrations2.edn")
+      (let [config (assoc-in config [:duct.migrator/ragtime :migrations]
+                             '[[:create-table foo (id "INTEGER")]
+                               [:create-table baz (id "INTEGER")]])
             system (swap! system (fn [sys] (ig/suspend! sys) (ig/resume config sys)))
             logs   (-> system ::logger :logs)
             db     (-> system :duct.database/sql)]
@@ -54,31 +56,14 @@
                @logs))))
 
     (testing "remove migration"
-      (let [config (assoc-in config [:duct.migrator/ragtime :migrations-file]
-                             "test/duct/migrator/migrations3.edn")
+      (let [config (assoc-in config [:duct.migrator/ragtime :migrations]
+                             '[[:create-table foo (id "INTEGER")]])
             system (swap! system (fn [sys] (ig/suspend! sys) (ig/resume config sys)))
             logs   (-> system ::logger :logs)
             db     (-> system :duct.database/sql)]
         (is (= ["ragtime_migrations" "foo"]
                (map :sqlite_master/name (find-tables db))))
         (is (= [[:duct.migrator.ragtime/rolling-back {:id "create-table-baz#055a605e"}]]
-               @logs))))
-
-    (testing "missing migration file"
-      (let [path   "test/duct/migrator/migrations-missing.edn"
-            config (assoc-in config [:duct.migrator/ragtime :migrations-file] path)
-            system (swap! system (fn [sys] (ig/suspend! sys) (ig/resume config sys)))
-            logs   (-> system ::logger :logs)]
-        (is (= [[:duct.migrator.ragtime/missing-file {:path path}]]
-               @logs))))
-
-    (testing "resume after missing migration file"
-      (let [system (swap! system (fn [sys] (ig/suspend! sys) (ig/resume config sys)))
-            logs   (-> system ::logger :logs)
-            db     (-> system :duct.database/sql)]
-        (is (= ["ragtime_migrations" "foo" "bar"]
-               (map :sqlite_master/name (find-tables db))))
-        (is (= [[:duct.migrator.ragtime/applying {:id "create-table-bar#3e718b28"}]]
                @logs))))
 
     (ig/halt! @system)

@@ -1,6 +1,5 @@
 (ns duct.migrator.ragtime
-  (:require [clojure.java.io :as io]
-            [duct.logger :as logger]
+  (:require [duct.logger :as logger]
             [integrant.core :as ig]
             [pandect.algo.sha1 :refer [sha1]]
             [ragtime.core :as ragtime]
@@ -43,8 +42,8 @@
 (defn- add-hash-to-id [migration]
   (update migration :id str "#" (subs (hash-migration migration) 0 8)))
 
-(defn- load-migrations [{:keys [migrations-file]}]
-  (->> (sql/load-migrations migrations-file)
+(defn- get-migrations [{:keys [migrations]}]
+  (->> (sql/->migrations migrations)
        (map (comp jdbc/sql-migration add-hash-to-id))))
 
 (defn- get-database [{:keys [database] :as opts}]
@@ -56,25 +55,13 @@
 (defn- get-reporter [{:keys [logger]}]
   (if logger (logger-reporter logger) reporter/print))
 
-(defn- migrations-file-exists? [{:keys [migrations-file]}]
-  {:pre [(some? migrations-file)]}
-  (.exists (io/file migrations-file)))
-
-(defn- report-missing-migrations-file [{:keys [logger migrations-file]}]
-  (if logger
-    (logger/warn logger ::missing-file {:path migrations-file})
-    (binding [*out* *err*]
-      (println "WARN: Missing migrations file:" migrations-file))))
-
 (defn- migrate [index options]
-  (if (migrations-file-exists? options)
-    (let [db    (get-database options)
-          strat (get-strategy options)
-          rep   (get-reporter options)
-          migs  (load-migrations options)]
-      (ragtime/migrate-all db index migs {:reporter rep, :strategy strat})
-      (ragtime/into-index index migs))
-    (do (report-missing-migrations-file options) {})))
+  (let [db    (get-database options)
+        strat (get-strategy options)
+        rep   (get-reporter options)
+        migs  (get-migrations options)]
+    (ragtime/migrate-all db index migs {:reporter rep, :strategy strat})
+    (ragtime/into-index index migs)))
 
 (defmethod ig/init-key :duct.migrator/ragtime [_ options]
   (migrate {} options))

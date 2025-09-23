@@ -7,12 +7,9 @@
   - `:database` - a `javax.sql.DataSource` instance
   - `:logger` - a logger that satisfies `duct.logger/Logger`
   - `:strategy` - a Ragtime strategy: :apply-new, :raise-error or :rebase
-  - `:migrations-file` - an edn file containing a vector of migrations
+  - `:migrations` - a vector of [Ragtime SQL migrations][2]
   - `:migrations-table` - the table to store applied migrations in (defaults
                           to `ragtime_migrations`)
-
-  The migrations file should contain a edn vector of Ragtime SQL migrations.
-  See the [Ragtime documentation][2] for more information.
 
   [1]: https://github.com/weavejester/ragtime
   [2]: https://github.com/weavejester/ragtime/wiki/SQL-Migrations"}}

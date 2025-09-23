@@ -26,7 +26,7 @@ which takes five options:
  {:database         #ig/ref :duct.database/sql
   :logger           #ig/ref :duct/logger
   :strategy         :rebase
-  :migrations-file  "migrations.edn"
+  :migrations       [...]
   :migrations-table "ragtime_migrations"}}
 ```
 
@@ -61,9 +61,11 @@ same names.
 
 [ragtime strategies]: https://weavejester.github.io/ragtime/ragtime.strategy.html
 
-### :migrations-file
+### :migrations
 
-A path to an edn file containing a vector of [Ragtime SQL migrations][].
+A data structure containing a vector of [Ragtime SQL migrations][]. As
+this can be large, it may be a a good idea to factor this out using the
+`#duct/include` reader tag, or an equivalent.
 
 [ragtime sql migrations]: https://github.com/weavejester/ragtime/wiki/SQL-Migrations#edn
 

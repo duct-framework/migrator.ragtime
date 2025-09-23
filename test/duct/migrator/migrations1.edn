@@ -1,2 +1,0 @@
-[[:create-table foo (id "INTEGER")]
- [:create-table bar (id "INTEGER")]]
