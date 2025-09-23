@@ -10,11 +10,11 @@
 
 Add the following dependency to your deps.edn file:
 
-    org.duct-framework/migrator.ragtime {:mvn/version "0.5.3"}
+    org.duct-framework/migrator.ragtime {:mvn/version "0.6.0"}
 
 Or to your Leiningen project file:
 
-    [org.duct-framework/migrator.ragtime "0.5.3"]
+    [org.duct-framework/migrator.ragtime "0.6.0"]
 
 ## Usage
 
